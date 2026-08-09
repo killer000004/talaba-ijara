@@ -1,0 +1,2658 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tolib-Tracker - Talabalar Lokatsiyasi</title>
+    <!-- Leaflet CSS (Xarita uchun) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+        body {
+            background-color: #f4f6f9;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        /* Header */
+        header {
+            background: #ffffff;
+            border-bottom: 1px solid #e0e0e0;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo {
+            font-size: 20px;
+            font-weight: 700;
+            color: #2563eb;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .user-info {
+            font-weight: 500;
+            color: #4b5563;
+        }
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .section-tabs {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 0 15px;
+            flex: 1;
+        }
+        .tab-btn {
+            padding: 8px 14px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            background: #f9fafb;
+            color: #374151;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .tab-btn:hover {
+            background: #eef2ff;
+        }
+        .tab-btn.active {
+            background: #2563eb;
+            border-color: #2563eb;
+            color: #fff;
+        }
+        .btn-settings {
+            padding: 8px 14px;
+            border: none;
+            border-radius: 8px;
+            background: #7c3aed;
+            color: #fff;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .btn-settings:hover {
+            background: #6d28d9;
+        }
+        .super-admin-only {
+            display: none;
+        }
+        body.super-admin .super-admin-only {
+            display: block;
+        }
+        .copy-loc-btn {
+            margin-left: 4px;
+            padding: 2px 6px;
+            border: 1px solid #c4b5fd;
+            border-radius: 6px;
+            background: #f5f3ff;
+            color: #7c3aed;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        .copy-loc-btn:hover {
+            background: #ede9fe;
+        }
+        .bus-stop-icon {
+            background: #2563eb;
+            border: 2px solid #fff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            box-shadow: 0 2px 5px rgba(0,0,0,.3);
+        }
+        .metro-stop-icon {
+            background: #dc2626;
+            border: 2px solid #fff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,.3);
+        }
+        .btn-logout {
+            padding: 8px 14px;
+            border: 1px solid #fca5a5;
+            border-radius: 8px;
+            background: #fff;
+            color: #dc2626;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .btn-logout:hover {
+            background: #fef2f2;
+        }
+        /* Login */
+        .login-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(6px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            padding: 20px;
+        }
+        .login-windows {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .login-box {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 16px;
+            padding: 30px 26px;
+            width: 100%;
+            max-width: 330px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.12);
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .login-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 6px;
+        }
+        .login-subtitle {
+            font-size: 13px;
+            color: #6b7280;
+            margin-bottom: 20px;
+        }
+        .login-row {
+            margin-bottom: 12px;
+        }
+        .login-row input {
+            width: 100%;
+            padding: 11px 14px;
+            border: 1px solid #d1d5db;
+            border-radius: 10px;
+            font-size: 14px;
+            outline: none;
+            box-sizing: border-box;
+        }
+        .login-row input:focus {
+            border-color: #2563eb;
+        }
+        .login-err {
+            color: #dc2626;
+            font-size: 13px;
+            min-height: 18px;
+            margin-bottom: 6px;
+        }
+        .btn-login {
+            width: 100%;
+            padding: 11px;
+            border: none;
+            border-radius: 10px;
+            background: #2563eb;
+            color: #fff;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .btn-login:hover {
+            background: #1d4ed8;
+        }
+        .login-sep {
+            margin: 16px 0 12px;
+            border-top: 1px solid #e5e7eb;
+        }
+        .btn-login2 {
+            width: 100%;
+            padding: 11px;
+            border: 1px solid #2563eb;
+            border-radius: 10px;
+            background: #eff6ff;
+            color: #2563eb;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .btn-login2:hover {
+            background: #dbeafe;
+        }
+        /* Bo'lim 2 */
+        .app-section {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            overflow: hidden;
+        }
+        .distance-box {
+            margin-top: 12px;
+            background: #fefce8;
+            border: 1px solid #fde047;
+            border-radius: 10px;
+            padding: 14px;
+        }
+        .distance-box h3 {
+            font-size: 14px;
+            color: #854d0e;
+            margin: 0 0 8px;
+        }
+        .distance-info {
+            font-size: 13px;
+            color: #713f12;
+            line-height: 1.5;
+        }
+        /* Main Layout */
+        .main-container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+        /* Sidebar */
+        sidebar {
+            width: 320px;
+            background: #ffffff;
+            border-right: 1px solid #e0e0e0;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        .sidebar-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #1f2937;
+        }
+        /* Talaba qo'shish formasi */
+        .add-form {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .add-form h3 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 12px;
+        }
+        .form-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .form-row input {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 13px;
+            outline: none;
+        }
+        .form-row input:focus {
+            border-color: #2563eb;
+        }
+        .form-row .half {
+            width: 50%;
+        }
+        .pick-location {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px dashed #2563eb;
+            border-radius: 6px;
+            background: #eff6ff;
+            color: #2563eb;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            margin-bottom: 8px;
+        }
+        .pick-location.active {
+            background: #2563eb;
+            color: #fff;
+        }
+        .photo-upload {
+            display: block;
+            text-align: center;
+            padding: 10px;
+            border: 1px dashed #9ca3af;
+            border-radius: 6px;
+            background: #fff;
+            color: #4b5563;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            margin-bottom: 8px;
+        }
+        .photo-upload:hover {
+            border-color: #2563eb;
+            color: #2563eb;
+        }
+        .upload-hint {
+            font-size: 11px;
+            color: #6b7280;
+            margin: -4px 0 8px;
+            text-align: center;
+        }
+        .photo-preview {
+            position: relative;
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 2px solid #2563eb;
+            margin: 0 auto 10px;
+        }
+        .photo-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .photo-preview button {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            width: 18px;
+            height: 18px;
+            border: none;
+            border-radius: 50%;
+            background: #ef4444;
+            color: #fff;
+            font-size: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .photo-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        .photo-grid-item {
+            position: relative;
+            height: 70px;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid #d1d5db;
+        }
+        .photo-grid-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .photo-grid-item button {
+            position: absolute;
+            top: 3px;
+            right: 3px;
+            width: 18px;
+            height: 18px;
+            border: none;
+            border-radius: 50%;
+            background: #ef4444;
+            color: #fff;
+            font-size: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .rent-owner-preview {
+            border-radius: 50% !important;
+            width: 64px;
+            height: 64px;
+        }
+        .rent-desc {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 10px;
+            font-size: 14px;
+            font-family: inherit;
+            resize: vertical;
+            box-sizing: border-box;
+            margin-bottom: 10px;
+            outline: none;
+        }
+        .rent-desc:focus {
+            border-color: #2563eb;
+        }
+        /* Rasm lightbox */
+        .photo-lightbox {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 5000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: zoom-out;
+            padding: 30px;
+        }
+        .photo-lightbox-content {
+            position: relative;
+            max-width: 90vw;
+            max-height: 90vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .photo-lightbox-content img {
+            max-width: 90vw;
+            max-height: 90vh;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            object-fit: contain;
+        }
+        .photo-lightbox-close {
+            position: absolute;
+            top: -40px;
+            right: -10px;
+            width: 34px;
+            height: 34px;
+            border: none;
+            border-radius: 50%;
+            background: #ef4444;
+            color: #fff;
+            font-size: 15px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 5001;
+        }
+        .rent-photo-thumb {
+            width: 48px;
+            height: 36px;
+            object-fit: cover;
+            border-radius: 6px;
+            margin-top: 6px;
+            margin-right: 3px;
+            display: inline-block;
+            cursor: zoom-in;
+            border: 1px solid #e5e7eb;
+            transition: 0.15s;
+        }
+        .rent-photo-thumb:hover {
+            transform: scale(1.08);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+        }
+        .rent-owner-thumb {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-top: 6px;
+            display: inline-block;
+            vertical-align: middle;
+            cursor: zoom-in;
+            border: 2px solid #2563eb;
+            transition: 0.15s;
+        }
+        .rent-owner-thumb:hover {
+            transform: scale(1.1);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+        }
+        .coords {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .coords input {
+            width: 50%;
+            padding: 8px 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 12px;
+            color: #6b7280;
+            background: #f3f4f6;
+            outline: none;
+        }
+        .btn-add {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            background: #2563eb;
+            color: #fff;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .btn-add:hover {
+            background: #1d4ed8;
+        }
+        .address-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        .address-row input {
+            flex: 1;
+            padding: 8px 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 13px;
+            outline: none;
+        }
+        .address-row input:focus {
+            border-color: #2563eb;
+        }
+        .btn-search {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 6px;
+            background: #2563eb;
+            color: #fff;
+            font-size: 14px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .btn-search:hover {
+            background: #1d4ed8;
+        }
+        .link-hint {
+            display: none;
+            font-size: 12px;
+            color: #047857;
+            background: #ecfdf5;
+            border: 1px solid #a7f3d0;
+            border-radius: 6px;
+            padding: 6px 10px;
+            margin-bottom: 8px;
+        }
+        .link-hint.error {
+            color: #b91c1c;
+            background: #fef2f2;
+            border-color: #fecaca;
+        }
+        .student-card {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            border-radius: 8px;
+            background: #f9fafb;
+            margin-bottom: 10px;
+            border: 1px solid #e5e7eb;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .student-card:hover {
+            background: #f3f4f6;
+            border-color: #d1d5db;
+        }
+        .student-avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #2563eb;
+            flex-shrink: 0;
+        }
+        .avatar-initials {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            border: 2px solid #2563eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 16px;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+        .student-details {
+            flex: 1;
+            min-width: 0;
+        }
+        .student-details h4 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #111827;
+        }
+        .student-details p {
+            font-size: 12px;
+            color: #6b7280;
+        }
+        .student-details .course-info {
+            font-size: 11px;
+            color: #2563eb;
+            font-weight: 500;
+        }
+        .delete-btn {
+            width: 32px;
+            height: 32px;
+            flex-shrink: 0;
+            border: none;
+            border-radius: 8px;
+            background: #fee2e2;
+            color: #dc2626;
+            font-size: 14px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .delete-btn:hover {
+            background: #dc2626;
+            color: #fff;
+        }
+        .route-btn {
+            margin-top: 8px;
+            width: 100%;
+            padding: 8px;
+            border: none;
+            border-radius: 6px;
+            background: #2563eb;
+            color: #fff;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .route-btn:hover {
+            background: #1d4ed8;
+        }
+        .status-badge {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #10b981;
+            margin-right: 4px;
+        }
+        .empty-list {
+            text-align: center;
+            color: #9ca3af;
+            font-size: 13px;
+            padding: 20px 0;
+        }
+        .search-row {
+            position: relative;
+            margin-bottom: 15px;
+        }
+        .search-row input {
+            width: 100%;
+            padding: 9px 12px 9px 36px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 13px;
+            outline: none;
+            background: #f9fafb;
+            transition: 0.2s;
+        }
+        .search-row input:focus {
+            border-color: #2563eb;
+            background: #fff;
+        }
+        .search-icon {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 15px;
+            color: #9ca3af;
+            pointer-events: none;
+        }
+        /* Map Area */
+        #map, #map2 {
+            flex: 1;
+            height: 100%;
+        }
+        /* Street View panel */
+        #streetview-panel {
+            position: fixed;
+            top: 70px;
+            right: 20px;
+            width: 380px;
+            max-width: 90vw;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.25);
+            z-index: 3000;
+            overflow: hidden;
+            display: none;
+        }
+        .sv-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            background: #111827;
+            color: #fff;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .sv-header button {
+            border: none;
+            background: none;
+            color: #fff;
+            font-size: 15px;
+            cursor: pointer;
+        }
+        #sv-frame {
+            width: 100%;
+            height: 400px;
+        }
+        #sv-frame iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        #sv-key-msg {
+            padding: 12px;
+            font-size: 13px;
+            color: #6b7280;
+            text-align: center;
+        }
+        /* Sozlamalar oynasi */
+        #settings-modal {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 4000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        .settings-content {
+            background: #fff;
+            border-radius: 12px;
+            padding: 25px;
+            width: 380px;
+            max-width: 90vw;
+        }
+        .settings-content h3 {
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: #111827;
+        }
+        .settings-content label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #374151;
+        }
+        .settings-content input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-bottom: 8px;
+            outline: none;
+        }
+        .settings-hint {
+            font-size: 12px;
+            color: #6b7280;
+            margin-bottom: 15px;
+        }
+        .settings-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        .route-btn:hover {
+            background: #1d4ed8;
+        }
+        .sv-btn {
+            background: #10b981;
+        }
+        .sv-btn:hover {
+            background: #059669;
+        }
+        .btn-cancel {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            background: #fff;
+            color: #374151;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .btn-cancel:hover {
+            background: #f3f4f6;
+        }
+        /* Custom Marker Style */
+        .custom-marker {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 3px solid #2563eb;
+            object-fit: cover;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        }
+        .marker-initials {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 3px solid #2563eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 15px;
+            font-weight: 700;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        }
+        .select-marker {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #f59e0b;
+            border: 3px solid #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Yuqori qism (Navbar) -->
+    <header>
+        <div class="logo">
+            🎓 Tolib-Tracker
+        </div>
+        <div class="section-tabs">
+            <button type="button" id="tab-section1" class="tab-btn active">🎓 Bo'lim 1: Talaba Tracker</button>
+            <button type="button" id="tab-section2" class="tab-btn">🏠 Bo'lim 2: Ijara Xonadon</button>
+        </div>
+        <div class="header-actions">
+            <button type="button" class="btn-settings" id="btn-settings">⚙️</button>
+            <div class="user-info" id="user-info">
+                Rejim: <b>Kuzatuvchi</b>
+            </div>
+            <button type="button" class="btn-logout" id="btn-logout" style="display:none;">🚪 Chiqish</button>
+        </div>
+    </header>
+
+    <!-- ===================== BO'LIM 1: TALABA TRACKER ===================== -->
+    <div id="section1" class="app-section">
+
+        <!-- Login oynasi -->
+        <div id="login-overlay" class="login-overlay">
+            <div class="login-windows">
+                <div class="login-box">
+                    <div class="login-title">👑 SUPER ADMIN</div>
+                    <div class="login-subtitle">Bo'lim 1 — Talaba Tracker (login va parol bilan kiriladi)</div>
+                    <div class="login-row">
+                        <input type="text" id="login-user" placeholder="Login" autocomplete="off">
+                    </div>
+                    <div class="login-row">
+                        <input type="password" id="login-pass" placeholder="Parol" autocomplete="off">
+                    </div>
+                    <div class="login-err" id="login-err"></div>
+                    <button type="button" class="btn-login" id="btn-login">Kirish</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Asosiy qism (tracker) -->
+        <div id="tracker-app" style="display:none;">
+    <div class="main-container">
+        <!-- Chap tomondagi talabalar ro'yxati -->
+        <sidebar>
+            <!-- Talaba qo'shish formasi -->
+            <div class="add-form">
+                <h3>➕ Talaba Qo'shish</h3>
+                <div class="form-row">
+                    <input type="text" id="in-name" placeholder="Ism" autocomplete="off">
+                    <input type="text" id="in-surname" placeholder="Familya" autocomplete="off">
+                </div>
+                <div class="form-row">
+                    <input type="text" id="in-course" placeholder="Kurs (1, 2, 3...)" autocomplete="off" class="half">
+                    <input type="text" id="in-group" placeholder="Guruh (e.g. 911-24)" autocomplete="off" class="half">
+                </div>
+                <label class="photo-upload" for="in-photo">📷 Rasm yuklash</label>
+                <input type="file" id="in-photo" accept="image/*" hidden>
+                <div class="photo-preview" id="photo-preview" style="display:none;">
+                    <img id="photo-preview-img" alt="Rasm">
+                    <button type="button" id="photo-remove">✖</button>
+                </div>
+                <button class="pick-location" id="pick-location">📍 Xaritadan joylashuv tanlash</button>
+                <div class="coords">
+                    <input type="text" id="in-lat" placeholder="Kenglik (lat)" readonly>
+                    <input type="text" id="in-lng" placeholder="Uzunlik (lng)" readonly>
+                </div>
+                <div class="address-row">
+                    <input type="text" id="in-address" placeholder="Manzil havolasini joylang (Google Maps / OSM)..." autocomplete="off">
+                    <button type="button" class="btn-search" id="btn-search">📍</button>
+                </div>
+                <div class="link-hint" id="link-hint"></div>
+                <button type="button" class="btn-add" id="btn-add">Talaba Qo'shish</button>
+            </div>
+
+            <div class="sidebar-title">Talabalar Ro'yxati (<span id="count">0</span>)</div>
+            <div class="search-row">
+                <input type="text" id="search-input" placeholder="Qidirish (ism, kurs, guruh)..." autocomplete="off">
+                <span class="search-icon">🔍</span>
+            </div>
+            <div id="student-list"></div>
+        </sidebar>
+
+        <!-- O'ng tarafdagi xarita -->
+        <div id="map"></div>
+    </div>
+        </div> <!-- /tracker-app -->
+    </div> <!-- /section1 -->
+
+    <!-- ===================== BO'LIM 2: IJARA XONADON ===================== -->
+    <div id="section2" class="app-section" style="display:none;">
+        <div class="main-container">
+            <!-- Chap tomondagi ko'rish ro'yxati -->
+            <sidebar>
+                <!-- Ijara kiritish formasi (faqat SUPER ADMIN ko'radi) -->
+                <div class="add-form rent-form super-admin-only">
+                    <h3>🏠 Ijara Xonadon Kiritish</h3>
+                    <div class="form-row">
+                        <input type="text" id="rent-name" placeholder="Ism" autocomplete="off">
+                        <input type="text" id="rent-surname" placeholder="Familya" autocomplete="off">
+                    </div>
+                    <div class="form-row">
+                        <input type="tel" id="rent-phone" placeholder="Telefon raqam (+998...)" autocomplete="off">
+                    </div>
+                    <div class="form-row">
+                        <input type="text" id="rent-price" placeholder="Narx (oyiga, so'm)..." autocomplete="off">
+                    </div>
+                    <textarea id="rent-desc" class="rent-desc" placeholder="Izoh (xonadon haqida ma'lumot)..." rows="3"></textarea>
+                    <label class="photo-upload" for="rent-owner-photo">👤 Xonadon egasi rasmi yuklash</label>
+                    <input type="file" id="rent-owner-photo" accept="image/*" hidden>
+                    <div class="photo-preview" id="rent-owner-preview" style="display:none;">
+                        <img id="rent-owner-img" alt="Egasi rasmi">
+                        <button type="button" id="rent-owner-remove">✖</button>
+                    </div>
+                    <label class="photo-upload" for="rent-photo">📷 Xonadon rasmlari (4 ta) yuklash</label>
+                    <div class="upload-hint">Bir vaqtda Ctrl tugmasini bosib 4 tagacha rasm tanlang</div>
+                    <input type="file" id="rent-photo" accept="image/*" multiple hidden>
+                    <div class="photo-preview" id="rent-photo-preview" style="display:none;">
+                        <img id="rent-photo-img" alt="Xonadon rasmi">
+                        <button type="button" id="rent-photo-remove">✖</button>
+                    </div>
+                    <div class="photo-grid" id="rent-photo-grid"></div>
+                    <button class="pick-location" id="pick-location2">📍 Xaritadan joylashuv tanlash</button>
+                    <div class="coords">
+                        <input type="text" id="rent-lat" placeholder="Kenglik (lat)" readonly>
+                        <input type="text" id="rent-lng" placeholder="Uzunlik (lng)" readonly>
+                    </div>
+                    <div class="address-row">
+                        <input type="text" id="rent-address" placeholder="Manzil havolasini joylang (Google Maps / OSM)..." autocomplete="off">
+                        <button type="button" class="btn-search" id="btn-search2">📍</button>
+                    </div>
+                    <div class="link-hint" id="link-hint2"></div>
+                    <button type="button" class="btn-add" id="btn-add-rent">Xonadon Qo'shish</button>
+                </div>
+
+                <div class="distance-box super-admin-only" id="rent-distance-box">
+                    <h3>📍 Universitetgacha masofa</h3>
+                    <div id="rent-distance"></div>
+                    <label class="photo-upload" for="rent-univ-photo" style="margin-top:10px;">🏫 Universitet rasmi yuklash</label>
+                    <input type="file" id="rent-univ-photo" accept="image/*" hidden>
+                    <div class="photo-preview" id="rent-univ-preview" style="display:none;margin-top:8px;">
+                        <img id="rent-univ-img" alt="Universitet rasmi">
+                        <button type="button" id="rent-univ-remove">✖</button>
+                    </div>
+                </div>
+
+                <div class="distance-box" id="rent-distance-box2">
+                    <h3>📍 Universitetgacha masofa</h3>
+                    <div id="rent-distance2"></div>
+                </div>
+                <div class="sidebar-title">Kiritilgan xonadonlar (<span id="rent-count2">0</span>)</div>
+                <div id="rent-list2"></div>
+            </sidebar>
+
+            <!-- O'ng tarafdagi xarita -->
+            <div id="map2"></div>
+        </div>
+    </div>
+
+    <!-- Street View panel -->
+    <div id="streetview-panel">
+        <div class="sv-header">
+            <span>🛣 Real Ko'rinish (Street View)</span>
+            <button type="button" id="sv-close">✖</button>
+        </div>
+        <div id="sv-frame"></div>
+        <div id="sv-key-msg"></div>
+    </div>
+
+    <!-- Rasm ko'rish (lightbox) -->
+    <div id="photo-lightbox" class="photo-lightbox" style="display:none;" onclick="closePhotoLightbox(event)">
+        <div class="photo-lightbox-content">
+            <button type="button" class="photo-lightbox-close" onclick="closePhotoLightbox(event)">✖</button>
+            <img id="photo-lightbox-img" alt="Rasm">
+        </div>
+    </div>
+
+    <!-- API kalit sozlamalari -->
+    <div id="settings-modal">
+        <div class="settings-content">
+            <h3>⚙️ Sozlamalar</h3>
+            <label for="gmaps-key">Google Street View API kaliti</label>
+            <input type="text" id="gmaps-key" placeholder="Google API kalit (Street View Static/Embed)">
+            <p class="settings-hint">Kalit: developers.google.com/maps - Street View Static API ni yoqib oling</p>
+            <div class="settings-buttons">
+                <button type="button" class="btn-add" id="btn-save-key">Saqlash</button>
+                <button type="button" class="btn-cancel" id="btn-cancel-key">Bekor qilish</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Xaritani Toshkent shahriga markazlash
+        var map = L.map('map').setView([41.2995, 69.2401], 13);
+
+        // OpenStreetMap qatlamini qo'shish
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Boshlang'ich talabalar (faqat birinchi marta ishlatiladi)
+        const defaultStudents = [
+            { name: "Aziz R.", surname: "", course: "3", group: "911-24", lat: 41.3111, lng: 69.2797, img: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100" },
+            { name: "Nigora A.", surname: "", course: "2", group: "912-24", lat: 41.3150, lng: 69.2550, img: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100" },
+            { name: "Zarina M.", surname: "", course: "4", group: "910-24", lat: 41.2858, lng: 69.2036, img: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100" }
+        ];
+
+        // Ma'lumotlarni localStorage ga saqlash (yangilaganda o'chmaydi)
+        const STORAGE_KEY = 'tolib_tracker_students';
+
+        function loadStudents() {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    if (Array.isArray(parsed)) return parsed;
+                }
+            } catch (e) {
+                console.warn('Saqlangan ma\'lumot o\'qilmadi:', e);
+            }
+            return JSON.parse(JSON.stringify(defaultStudents));
+        }
+
+        function saveStudents() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(students));
+            } catch (e) {
+                console.warn('Ma\'lumot saqlanmadi:', e);
+            }
+        }
+
+        const students = loadStudents();
+
+        // Avatarlar va markerlar uchun ranglar
+        const avatarColors = ['#2563eb', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
+
+        function getColor(name) {
+            let sum = 0;
+            for (let i = 0; i < name.length; i++) sum += name.charCodeAt(i);
+            return avatarColors[sum % avatarColors.length];
+        }
+
+        function getInitials(name) {
+            return name.split(' ').map(w => w.charAt(0)).join('').toUpperCase().slice(0, 2);
+        }
+
+        // Talabalar ro'yxatini (sidebar) qayta render qilish
+        function renderList() {
+            const list = document.getElementById('student-list');
+            const searchInput = document.getElementById('search-input');
+            const query = searchInput ? searchInput.value.trim().toLowerCase() : '';
+
+            document.getElementById('count').textContent = students.length;
+
+            // Qidiruv bo'yicha filtrlash (index haqiqiy massiv indeksi bo'lib qoladi)
+            const filtered = students
+                .map((student, index) => ({ student, index }))
+                .filter(({ student }) => {
+                    if (!query) return true;
+                    const fullName = (student.surname ? `${student.name} ${student.surname}` : student.name).toLowerCase();
+                    return fullName.includes(query)
+                        || (student.course || '').toLowerCase().includes(query)
+                        || (student.group || '').toLowerCase().includes(query);
+                });
+
+            if (filtered.length === 0) {
+                list.innerHTML = `<div class="empty-list">${students.length === 0 ? 'Hozircha talabalar yo\'q' : 'Hech narsa topilmadi'}</div>`;
+                return;
+            }
+
+            list.innerHTML = filtered.map(({ student, index }) => {
+                const avatar = student.img
+                    ? `<img src="${student.img}" class="student-avatar" alt="${student.name}">`
+                    : `<div class="avatar-initials" style="background:${getColor(student.name)}">${getInitials(student.name)}</div>`;
+
+                const fullName = student.surname ? `${student.name} ${student.surname}` : student.name;
+                const courseInfo = (student.course || student.group)
+                    ? `${student.course ? student.course + '-kurs' : ''}${student.course && student.group ? ' | ' : ''}${student.group || ''}`
+                    : '';
+
+                return `
+                    <div class="student-card" data-lat="${student.lat}" data-lng="${student.lng}">
+                        ${avatar}
+                        <div class="student-details">
+                            <h4>${fullName}</h4>
+                            <p><span class="status-badge"></span>Faol</p>
+                            ${courseInfo ? `<p class="course-info">${courseInfo}</p>` : ''}
+                        </div>
+                        <button type="button" class="delete-btn" data-index="${index}" title="O'chirish">🗑</button>
+                    </div>`;
+            }).join('');
+
+            // Karta bosilganda xaritada markerga o'tish
+            document.querySelectorAll('.student-card').forEach(card => {
+                card.addEventListener('click', e => {
+                    if (e.target.closest('.delete-btn')) return;
+                    map.setView([parseFloat(card.dataset.lat), parseFloat(card.dataset.lng)], 15);
+                });
+            });
+
+            // O'chirish tugmasi
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', e => {
+                    e.stopPropagation();
+                    const index = parseInt(btn.dataset.index);
+                    deleteStudent(index);
+                });
+            });
+        }
+
+        // Talabani o'chirish
+        function deleteStudent(index) {
+            const student = students[index];
+            if (!student) return;
+
+            const fullName = student.surname ? `${student.name} ${student.surname}` : student.name;
+            if (!confirm(`"${fullName}" ni o'chirishni tasdiqlaysizmi?`)) return;
+
+            students.splice(index, 1);
+            saveStudents();
+            renderList();
+            renderMarkers();
+            showToast(`🗑 ${fullName} o'chirildi`);
+        }
+
+        // Xaritaga markerlar qo'yish
+        function renderMarkers() {
+            map.eachLayer(layer => {
+                if (layer instanceof L.Marker) map.removeLayer(layer);
+            });
+
+            // Eski route va foydalanuvchi markerini tozalash
+            if (routeLayer) { map.removeLayer(routeLayer); routeLayer = null; }
+            if (userMarker) { map.removeLayer(userMarker); userMarker = null; }
+            stopTracking();
+
+            students.forEach(student => {
+                const markerContent = student.img
+                    ? `<img src="${student.img}" class="custom-marker">`
+                    : `<div class="marker-initials" style="background:${getColor(student.name)}">${getInitials(student.name)}</div>`;
+
+                let customIcon = L.divIcon({
+                    className: 'custom-div-icon',
+                    html: markerContent,
+                    iconSize: [40, 40],
+                    iconAnchor: [20, 20]
+                });
+
+                const fullName = student.surname ? `${student.name} ${student.surname}` : student.name;
+                const courseInfo = (student.course || student.group)
+                    ? `${student.course ? student.course + '-kurs' : ''}${student.course && student.group ? ' | ' : ''}${student.group || ''}`
+                    : '';
+
+                const marker = L.marker([student.lat, student.lng], { icon: customIcon }).addTo(map);
+
+                const popupContent = `
+                    <b>${fullName}</b><br>
+                    ${courseInfo ? courseInfo + '<br>' : ''}
+                    Oxirgi faollik: Yaqinda<br>
+                    <button type="button" class="route-btn" onclick="showRoute(${student.lat}, ${student.lng}, '${fullName.replace(/'/g, "\\'")}')">🚗 Yo'l va masofa</button>
+                    <button type="button" class="route-btn sv-btn" onclick="openStreetView(${student.lat}, ${student.lng}, '${fullName.replace(/'/g, "\\'")}')">🛣 Real Ko'rinish</button>
+                    <div id="route-info" style="margin-top:6px;font-size:13px;"></div>`;
+
+                marker.bindPopup(popupContent);
+            });
+        }
+
+        // Foydalanuvchi joriy joylashuvi
+        let userLocation = null;
+
+        function getUserLocation() {
+            return new Promise((resolve) => {
+                if (userLocation) return resolve(userLocation);
+                if (!navigator.geolocation) return resolve(null);
+
+                navigator.geolocation.getCurrentPosition(
+                    pos => {
+                        userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+                        resolve(userLocation);
+                    },
+                    () => resolve(null),
+                    { timeout: 8000 }
+                );
+            });
+        }
+
+        // OSRM orqali yo'l (route) hisoblash va xaritada ko'rsatish
+        let routeLayer = null;
+        let userMarker = null;
+        let watchId = null;
+        let trackingDestination = null;
+
+        function clearRoute() {
+            if (routeLayer) { map.removeLayer(routeLayer); routeLayer = null; }
+            if (userMarker) { map.removeLayer(userMarker); userMarker = null; }
+            stopTracking();
+        }
+
+        // Jonli kuzatuvni to'xtatish
+        function stopTracking() {
+            if (watchId !== null) {
+                navigator.geolocation.clearWatch(watchId);
+                watchId = null;
+            }
+            trackingDestination = null;
+        }
+
+        // Havo (to'g'ri chiziq) masofasi
+        function haversineDistance(lat1, lng1, lat2, lng2) {
+            const R = 6371000;
+            const toRad = d => d * Math.PI / 180;
+            const dLat = toRad(lat2 - lat1);
+            const dLng = toRad(lng2 - lng1);
+            const a = Math.sin(dLat / 2) ** 2
+                + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+            return 2 * R * Math.asin(Math.sqrt(a));
+        }
+
+        // Jonli masofa yangilanishi
+        function startLiveTracking(destLat, destLng, studentName, info) {
+            stopTracking();
+            trackingDestination = { lat: destLat, lng: destLng };
+
+            // Yangi kuzatuv markeri
+            if (userMarker) map.removeLayer(userMarker);
+            userMarker = L.circleMarker([destLat, destLng], {
+                radius: 8,
+                color: '#2563eb',
+                fillColor: '#3b82f6',
+                fillOpacity: 0.9
+            }).addTo(map).bindPopup(`<b>${studentName}</b>`);
+
+            if (!navigator.geolocation) {
+                if (info) info.innerHTML = '❌ Geolokatsiya qo\'llab-quvvatlanmaydi';
+                return;
+            }
+
+            watchId = navigator.geolocation.watchPosition(
+                pos => {
+                    const { latitude, longitude } = pos.coords;
+                    const distance = haversineDistance(latitude, longitude, destLat, destLng);
+                    const distanceKm = (distance / 1000).toFixed(2);
+
+                    // Foydalanuvchi joylashuvini xaritada ko'rsatish
+                    if (userMarker) {
+                        userMarker.setLatLng([latitude, longitude]);
+                    }
+
+                    if (info) {
+                        info.innerHTML = `
+                            <div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:8px;">
+                                <b>${studentName}</b><br>
+                                📏 Qolgan masofa: <b>${fmtDist(distanceKm)}</b><br>
+                                <span style="font-size:11px;color:#92400e;">🟢 Yurishda masofa jonli yangilanmoqda...</span>
+                            </div>`;
+                    }
+                },
+                err => {
+                    if (info) info.innerHTML = '❌ Geolokatsiya xatosi: ' + err.message;
+                },
+                { enableHighAccuracy: true, maximumAge: 1000, timeout: 10000 }
+            );
+        }
+
+        async function showRoute(destLat, destLng, studentName) {
+            const info = document.getElementById('route-info');
+            if (info) info.textContent = '⏳ Yo\'l hisoblanmoqda...';
+
+            // 1. Foydalanuvchi joylashuvini olish
+            let origin = await getUserLocation();
+
+            // 2. Geolocation bo'lmasa xaritadagi markazni ishlatish yoki so'rash
+            if (!origin) {
+                origin = { lat: map.getCenter().lat, lng: map.getCenter().lng };
+                if (!confirm("Joylashuvingizni aniqlab bo'lmadi. Xarita markazidan masofani hisoblash kerakmi?")) {
+                    if (info) info.textContent = '❌ Bekor qilindi';
+                    return;
+                }
+            }
+
+            clearRoute();
+
+            // 3. OSRM dan route so'rash
+            try {
+                const url = `https://router.project-osrm.org/route/v1/driving/${origin.lng},${origin.lat};${destLng},${destLat}?overview=full&geometries=geojson`;
+                const res = await fetch(url);
+                const data = await res.json();
+
+                if (data.code !== 'Ok' || !data.routes || data.routes.length === 0) {
+                    if (info) info.textContent = '❌ Yo\'l topilmadi';
+                    return;
+                }
+
+                const route = data.routes[0];
+                const coords = route.geometry.coordinates.map(c => [c[1], c[0]]);
+
+                // Yo'l chizig'ini chizish
+                routeLayer = L.polyline(coords, {
+                    color: '#f59e0b',
+                    weight: 5,
+                    opacity: 0.85
+                }).addTo(map);
+
+                // Masofa va vaqt
+                const distanceKm = (route.distance / 1000).toFixed(1);
+                const durationMin = Math.round(route.duration / 60);
+
+                // Xaritani route ga moslash
+                map.fitBounds(L.latLngBounds(coords), { padding: [40, 40] });
+
+                // Info panel
+                if (info) {
+                    info.innerHTML = `
+                        <div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:8px;">
+                            <b>${studentName}</b><br>
+                            📏 Masofa: <b>${fmtDist(distanceKm)}</b><br>
+                            ⏱ Vaqt: <b>${durationMin} daqiqa</b><br>
+                            <button type="button" class="route-btn" onclick="startLiveTracking(${destLat}, ${destLng}, '${studentName.replace(/'/g, "\\'")}', document.getElementById('route-info'))">🟢 Jonli kuzatuv</button>
+                        </div>`;
+                }
+
+                // Ruxsat bo'lsa jonli kuzatuvni avtomatik boshlash
+                startLiveTracking(destLat, destLng, studentName, info);
+            } catch (err) {
+                if (info) info.textContent = '❌ Xatolik yuz berdi: ' + err.message;
+            }
+        }
+
+        // Talabani ro'yxat va xaritaga qo'shish
+        function addStudent() {
+            const name = document.getElementById('in-name').value.trim();
+            const surname = document.getElementById('in-surname').value.trim();
+            const course = document.getElementById('in-course').value.trim();
+            const group = document.getElementById('in-group').value.trim();
+            const lat = parseFloat(document.getElementById('in-lat').value);
+            const lng = parseFloat(document.getElementById('in-lng').value);
+
+            if (!name) {
+                showToast("⚠️ Ismni kiriting!");
+                return;
+            }
+            if (isNaN(lat) || isNaN(lng)) {
+                showToast("⚠️ Xaritadan joylashuv tanlang!");
+                return;
+            }
+
+            const fullName = surname ? `${name} ${surname}` : name;
+            const newStudent = { name: fullName, surname: "", course, group, lat, lng, img: selectedPhoto };
+            students.push(newStudent);
+            saveStudents();
+
+            renderList();
+            renderMarkers();
+            map.setView([lat, lng], 15);
+
+            // Formani tozalash
+            document.getElementById('in-name').value = '';
+            document.getElementById('in-surname').value = '';
+            document.getElementById('in-course').value = '';
+            document.getElementById('in-group').value = '';
+            document.getElementById('in-lat').value = '';
+            document.getElementById('in-lng').value = '';
+            selectedPhoto = null;
+            photoPreview.style.display = 'none';
+            photoPreviewImg.src = '';
+            document.getElementById('in-photo').value = '';
+
+            showToast(`✅ ${fullName} qo'shildi!`);
+        }
+
+        // Qisqa xabar (toast)
+        function showToast(message) {
+            let toast = document.getElementById('toast');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'toast';
+                toast.style.cssText = 'position:fixed;top:70px;left:50%;transform:translateX(-50%);background:#111827;color:#fff;padding:10px 18px;border-radius:8px;font-size:14px;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,0.2);';
+                document.body.appendChild(toast);
+            }
+            toast.textContent = message;
+            toast.style.display = 'block';
+            clearTimeout(toast._timer);
+            toast._timer = setTimeout(() => { toast.style.display = 'none'; }, 2500);
+        }
+
+        // Rasm yuklash
+        let selectedPhoto = null;
+        const photoInput = document.getElementById('in-photo');
+        const photoPreview = document.getElementById('photo-preview');
+        const photoPreviewImg = document.getElementById('photo-preview-img');
+
+        photoInput.addEventListener('change', () => {
+            const file = photoInput.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = e => {
+                selectedPhoto = e.target.result;
+                photoPreviewImg.src = selectedPhoto;
+                photoPreview.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        });
+
+        document.getElementById('photo-remove').addEventListener('click', () => {
+            selectedPhoto = null;
+            photoPreview.style.display = 'none';
+            photoPreviewImg.src = '';
+            photoInput.value = '';
+        });
+
+        document.getElementById('btn-add').addEventListener('click', addStudent);
+        document.getElementById('in-group').addEventListener('keydown', e => {
+            if (e.key === 'Enter') addStudent();
+        });
+
+        // Qidiruv
+        document.getElementById('search-input').addEventListener('input', () => {
+            renderList();
+        });
+
+        // Manzil havolasini (link) kiritib lokatsiya belgilash
+        const addressInput = document.getElementById('in-address');
+        const btnSearch = document.getElementById('btn-search');
+        const linkHint = document.getElementById('link-hint');
+
+        // Google Maps / OpenStreetMap havolasidan koordinatalarni chiqarish
+        function parseCoordinatesFromLink(url) {
+            if (!url) return null;
+
+            // Google Maps: @lat,lng  yoki  /@lat,lng,zoom  yoki ?q=lat,lng
+            let m = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+            if (m) return { lat: parseFloat(m[1]), lng: parseFloat(m[2]) };
+
+            // Google Maps: q=lat,lng
+            m = url.match(/[?&]q=(-?\d+\.\d+),(-?\d+\.\d+)/);
+            if (m) return { lat: parseFloat(m[1]), lng: parseFloat(m[2]) };
+
+            // Google Maps: query=lat,lng
+            m = url.match(/[?&]query=(-?\d+\.\d+),(-?\d+\.\d+)/);
+            if (m) return { lat: parseFloat(m[1]), lng: parseFloat(m[2]) };
+
+            // OpenStreetMap: #map=zoom/lat/lng
+            m = url.match(/#map=\d+\/(-?\d+\.\d+)\/(-?\d+\.\d+)/);
+            if (m) return { lat: parseFloat(m[1]), lng: parseFloat(m[2]) };
+
+            // Yandex: ll=lat,lng
+            m = url.match(/[?&]ll=(-?\d+\.\d+),(-?\d+\.\d+)/);
+            if (m) return { lat: parseFloat(m[2]), lng: parseFloat(m[1]) };
+
+            return null;
+        }
+
+        function setLinkHint(message, isError) {
+            linkHint.textContent = message;
+            linkHint.classList.toggle('error', !!isError);
+            linkHint.style.display = 'block';
+        }
+
+        function applyLocationFromLink() {
+            const link = addressInput.value.trim();
+            if (!link) {
+                setLinkHint("Manzil havolasini joylang", true);
+                return;
+            }
+
+            const coords = parseCoordinatesFromLink(link);
+            if (!coords) {
+                setLinkHint("Havoladan koordinata topilmadi. Google Maps yoki OpenStreetMap havolasini joylang.", true);
+                return;
+            }
+
+            setLocation(coords);
+            map.setView([coords.lat, coords.lng], 16);
+            setLinkHint(`📍 Belgilandi: ${coords.lat.toFixed(5)}, ${coords.lng.toFixed(5)}`, false);
+        }
+
+        btnSearch.addEventListener('click', applyLocationFromLink);
+        addressInput.addEventListener('keydown', e => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                applyLocationFromLink();
+            }
+        });
+
+        // Xaritadan joylashuv tanlash
+        let selectingLocation = false;
+        let tempMarker = null;
+        const pickBtn = document.getElementById('pick-location');
+
+        pickBtn.addEventListener('click', () => {
+            selectingLocation = !selectingLocation;
+            pickBtn.classList.toggle('active', selectingLocation);
+            pickBtn.textContent = selectingLocation
+                ? '🗺 Xaritadan nuqtani bosing...'
+                : '📍 Xaritadan joylashuv tanlash';
+        });
+
+        map.on('click', e => {
+            if (selectingLocation) {
+                setLocation(e.latlng);
+            }
+        });
+
+        // O'ng tugma bilan ham joylashuvni belgilash
+        map.on('contextmenu', e => {
+            if (selectingLocation) {
+                setLocation(e.latlng);
+            } else {
+                L.popup()
+                    .setLatLng(e.latlng)
+                    .setContent('📍 Mana shu joy tanlandi')
+                    .openOn(map);
+                document.getElementById('in-lat').value = e.latlng.lat.toFixed(5);
+                document.getElementById('in-lng').value = e.latlng.lng.toFixed(5);
+                if (tempMarker) {
+                    tempMarker.setLatLng(e.latlng);
+                } else {
+                    tempMarker = L.marker(e.latlng, {
+                        icon: L.divIcon({
+                            className: 'custom-div-icon',
+                            html: '<div class="select-marker"></div>',
+                            iconSize: [18, 18],
+                            iconAnchor: [9, 9]
+                        })
+                    }).addTo(map);
+                }
+                pickBtn.textContent = '📍 Xaritadan joylashuv tanlash';
+                pickBtn.classList.remove('active');
+            }
+        });
+
+        function setLocation(latlng) {
+            document.getElementById('in-lat').value = latlng.lat.toFixed(5);
+            document.getElementById('in-lng').value = latlng.lng.toFixed(5);
+
+            if (tempMarker) {
+                tempMarker.setLatLng(latlng);
+            } else {
+                tempMarker = L.marker(latlng, {
+                    icon: L.divIcon({
+                        className: 'custom-div-icon',
+                        html: '<div class="select-marker"></div>',
+                        iconSize: [18, 18],
+                        iconAnchor: [9, 9]
+                    }),
+                    draggable: true
+                }).addTo(map);
+            }
+
+            tempMarker.on('dragend', () => {
+                const pos = tempMarker.getLatLng();
+                document.getElementById('in-lat').value = pos.lat.toFixed(5);
+                document.getElementById('in-lng').value = pos.lng.toFixed(5);
+            });
+
+            selectingLocation = false;
+            pickBtn.classList.remove('active');
+            pickBtn.textContent = '📍 Xaritadan joylashuv tanlash';
+        }
+
+        // Boshlang'ich render
+        renderList();
+        renderMarkers();
+
+        // ==================== STREET VIEW (Google) ====================
+        const GMAPS_KEY_STORAGE = 'tolib_tracker_gmaps_key';
+        let gmapsKey = localStorage.getItem(GMAPS_KEY_STORAGE) || '';
+
+        function openStreetView(lat, lng, name) {
+            const panel = document.getElementById('streetview-panel');
+            const frame = document.getElementById('sv-frame');
+            const msg = document.getElementById('sv-key-msg');
+            frame.innerHTML = '';
+            msg.innerHTML = '';
+
+            if (!gmapsKey) {
+                msg.innerHTML = `
+                    <div style="text-align:center;">
+                        <p>🛣 Real ko'rinishni ko'rish uchun Google API kaliti kerak.</p>
+                        <p style="margin:8px 0;color:#b91c1c;font-weight:600;">Kalit kiritilmagan!</p>
+                        <button type="button" class="route-btn sv-btn" onclick="openSettings()">⚙️ Kalitni kiritish</button>
+                    </div>`;
+                panel.style.display = 'block';
+                return;
+            }
+
+            const iframe = document.createElement('iframe');
+            iframe.src = `https://www.google.com/maps/embed/v1/streetview?key=${gmapsKey}&location=${lat},${lng}&heading=210&pitch=0&fov=90`;
+            iframe.allowFullscreen = true;
+            frame.appendChild(iframe);
+            panel.style.display = 'block';
+        }
+
+        document.getElementById('sv-close').addEventListener('click', () => {
+            document.getElementById('streetview-panel').style.display = 'none';
+            document.getElementById('sv-frame').innerHTML = '';
+        });
+
+        // ==================== SOZLAMALAR ====================
+        function openSettings() {
+            document.getElementById('gmaps-key').value = gmapsKey;
+            document.getElementById('settings-modal').style.display = 'flex';
+        }
+
+        document.getElementById('btn-settings').addEventListener('click', openSettings);
+        document.getElementById('btn-cancel-key').addEventListener('click', () => {
+            document.getElementById('settings-modal').style.display = 'none';
+        });
+        document.getElementById('btn-save-key').addEventListener('click', () => {
+            gmapsKey = document.getElementById('gmaps-key').value.trim();
+            localStorage.setItem(GMAPS_KEY_STORAGE, gmapsKey);
+            document.getElementById('settings-modal').style.display = 'none';
+            showToast('✅ Sozlamalar saqlandi');
+        });
+
+        // ==================== BO'LIM ALMASHTIRISH ====================
+        function switchSection(sec) {
+            document.getElementById('section1').style.display = (sec === 1) ? 'flex' : 'none';
+            document.getElementById('section2').style.display = (sec === 2) ? 'flex' : 'none';
+            document.getElementById('tab-section1').classList.toggle('active', sec === 1);
+            document.getElementById('tab-section2').classList.toggle('active', sec === 2);
+            setTimeout(() => {
+                if (sec === 1) {
+                    map.invalidateSize();
+                } else {
+                    initRentMap();
+                    refreshUnivPhotoUI();
+                    if (rentMap) rentMap.invalidateSize();
+                }
+            }, 100);
+        }
+        document.getElementById('tab-section1').addEventListener('click', () => switchSection(1));
+        document.getElementById('tab-section2').addEventListener('click', () => switchSection(2));
+
+        // ==================== LOGIN (SUPER ADMIN) ====================
+        const LOGIN_USER = 'A12';
+        const LOGIN_PASS = 'A12';
+        const LOGIN_KEY = 'tolib_tracker_login';
+        const IS_ADMIN_PAGE = window.location.pathname.includes('/admin/');
+
+        function checkLogin() {
+            if (!IS_ADMIN_PAGE) {
+                // Kuzatuvchi rejimi — loginsiz, faqat Bo'lim 2
+                document.body.classList.remove('super-admin');
+                const ui = document.getElementById('user-info');
+                ui.innerHTML = 'Rejim: <b>👀 Kuzatuvchi</b>';
+                ui.style.display = '';
+                document.getElementById('btn-settings').style.display = 'none';
+                document.getElementById('btn-logout').style.display = 'none';
+                document.getElementById('login-overlay').style.display = 'none';
+                document.getElementById('tracker-app').style.display = 'flex';
+                document.getElementById('tab-section1').style.display = 'none';
+                document.getElementById('tab-section2').style.display = 'inline-block';
+                switchSection(2);
+                return;
+            }
+            const isAdmin = sessionStorage.getItem(LOGIN_KEY) === '1';
+            document.body.classList.toggle('super-admin', isAdmin);
+            const userInfo = document.getElementById('user-info');
+            userInfo.innerHTML = isAdmin ? 'Rejim: <b>👑 Super Admin</b>' : '';
+            userInfo.style.display = isAdmin ? '' : 'none';
+            document.getElementById('btn-settings').style.display = isAdmin ? '' : 'none';
+            if (isAdmin) {
+                document.getElementById('login-overlay').style.display = 'none';
+                document.getElementById('tracker-app').style.display = 'flex';
+                document.getElementById('btn-logout').style.display = 'inline-block';
+                document.getElementById('tab-section1').style.display = 'inline-block';
+                document.getElementById('tab-section2').style.display = 'inline-block';
+                setTimeout(() => map.invalidateSize(), 50);
+            } else {
+                document.getElementById('login-overlay').style.display = 'flex';
+                document.getElementById('tracker-app').style.display = 'none';
+                document.getElementById('btn-logout').style.display = 'none';
+                document.getElementById('tab-section1').style.display = 'none';
+                document.getElementById('tab-section2').style.display = 'inline-block';
+            }
+        }
+
+        document.getElementById('btn-logout').addEventListener('click', () => {
+            sessionStorage.removeItem(LOGIN_KEY);
+            document.getElementById('login-user').value = '';
+            document.getElementById('login-pass').value = '';
+            document.getElementById('login-err').innerHTML = '';
+            checkLogin();
+            switchSection(1);
+            showToast('👋 Profildan chiqdingiz');
+        });
+
+        document.getElementById('btn-login').addEventListener('click', () => {
+            const u = document.getElementById('login-user').value.trim().toUpperCase();
+            const p = document.getElementById('login-pass').value.trim().toUpperCase();
+            if (u === LOGIN_USER && p === LOGIN_PASS) {
+                sessionStorage.setItem(LOGIN_KEY, '1');
+                document.getElementById('login-err').innerHTML = '';
+                checkLogin();
+                switchSection(1);
+                showToast('✅ Muvaffaqiyatli kirdingiz!');
+            } else {
+                document.getElementById('login-err').innerHTML = '❌ Login yoki parol noto\'g\'ri!';
+            }
+        });
+
+        // Enter bilan kirish
+        ['login-user', 'login-pass'].forEach(id => {
+            document.getElementById(id).addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') document.getElementById('btn-login').click();
+            });
+        });
+
+        checkLogin();
+
+        // ==================== BO'LIM 2: IJARA XONADON ====================
+        const RENT_STORAGE = 'tolib_tracker_rentals';
+        const UNIV_COORDS = [41.2503514, 69.3230559];
+        let rentMap = null;
+        let rentMarker = null;
+        let rentUniMarker = null;
+        let rentRentMarkers = null;
+        let rentRouteLayer = null;
+        let rentAltRouteLayers = [];
+        let rentLineLayer = null;
+        let rentWalkLayer = null;
+        let rentBusStopMarkers = [];
+        let rentMetroMarkers = [];
+        let rentBusRouteLayer = null;
+        let rentWatching = false;
+        let rentSelected = null;
+        let rentPhotoData = null;
+        let rentOwnerPhotoData = null;
+        let rentPhotoGridData = [];
+
+        const rentEls = {
+            name: document.getElementById('rent-name'),
+            surname: document.getElementById('rent-surname'),
+            phone: document.getElementById('rent-phone'),
+            price: document.getElementById('rent-price'),
+            desc: document.getElementById('rent-desc'),
+            lat: document.getElementById('rent-lat'),
+            lng: document.getElementById('rent-lng'),
+            address: document.getElementById('rent-address'),
+            linkHint: document.getElementById('link-hint2'),
+            distBox: document.getElementById('rent-distance'),
+            ownerPhotoInput: document.getElementById('rent-owner-photo'),
+            ownerPreview: document.getElementById('rent-owner-preview'),
+            ownerImg: document.getElementById('rent-owner-img'),
+            ownerRemove: document.getElementById('rent-owner-remove'),
+            photoInput: document.getElementById('rent-photo'),
+            photoPreview: document.getElementById('rent-photo-preview'),
+            photoImg: document.getElementById('rent-photo-img'),
+            photoRemove: document.getElementById('rent-photo-remove'),
+            photoGrid: document.getElementById('rent-photo-grid'),
+            univPhotoInput: document.getElementById('rent-univ-photo'),
+            univPreview: document.getElementById('rent-univ-preview'),
+            univImg: document.getElementById('rent-univ-img'),
+            univRemove: document.getElementById('rent-univ-remove'),
+        };
+
+        const UNIV_PHOTO_KEY = 'tolib_tracker_univ_photo';
+
+        function getUnivPhoto() {
+            try {
+                return localStorage.getItem(UNIV_PHOTO_KEY);
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function setUnivPhoto(dataUrl) {
+            try {
+                if (dataUrl) localStorage.setItem(UNIV_PHOTO_KEY, dataUrl);
+                else localStorage.removeItem(UNIV_PHOTO_KEY);
+                return true;
+            } catch (e) {
+                return false;
+            }
+        }
+
+        function refreshUnivPhotoUI() {
+            const saved = getUnivPhoto();
+            if (saved) {
+                rentEls.univImg.src = saved;
+                rentEls.univPreview.style.display = 'flex';
+            } else {
+                rentEls.univPreview.style.display = 'none';
+                rentEls.univImg.src = '';
+            }
+        }
+
+        // Universitet rasmi yuklash
+        rentEls.univPhotoInput.addEventListener('change', () => {
+            const file = rentEls.univPhotoInput.files[0];
+            if (!file) return;
+            compressImage(file, 640, 0.7, (dataUrl) => {
+                if (setUnivPhoto(dataUrl)) {
+                    rentEls.univImg.src = dataUrl;
+                    rentEls.univPreview.style.display = 'flex';
+                    refreshUnivMarker();
+                    showToast('🏫 Universitet rasmi saqlandi');
+                } else {
+                    showToast('❌ Rasm saqlanmadi (hajm katta bo\'lishi mumkin)');
+                }
+            });
+        });
+
+        rentEls.univRemove.addEventListener('click', () => {
+            setUnivPhoto(null);
+            rentEls.univPhotoInput.value = '';
+            rentEls.univPreview.style.display = 'none';
+            rentEls.univImg.src = '';
+            refreshUnivMarker();
+            showToast('🏫 Universitet rasmi o\'chirildi');
+        });
+
+        // Telefon raqamiga avtomatik +998 va formatlash
+        function formatPhone(input) {
+            let digits = input.replace(/\D/g, '');
+            if (digits.startsWith('998')) digits = digits.slice(3);
+            digits = digits.slice(0, 9);
+            let out = '+998';
+            if (digits.length) {
+                out += ' ' + digits.slice(0, 2);
+                if (digits.length > 2) {
+                    out += ' ' + digits.slice(2, 5);
+                    if (digits.length > 5) {
+                        out += ' ' + digits.slice(5, 7);
+                        if (digits.length > 7) {
+                            out += ' ' + digits.slice(7, 9);
+                        }
+                    }
+                }
+            }
+            return out;
+        }
+
+        rentEls.phone.addEventListener('input', () => {
+            const caret = rentEls.phone.selectionStart;
+            const before = rentEls.phone.value.length;
+            rentEls.phone.value = formatPhone(rentEls.phone.value);
+            const after = rentEls.phone.value.length;
+            if (caret != null) rentEls.phone.setSelectionRange(Math.min(caret + (after - before), after), Math.min(caret + (after - before), after));
+        });
+
+        rentEls.phone.addEventListener('keydown', (e) => {
+            if (e.key === 'Backspace' || e.key === 'Delete') return;
+            if (!/[\d+]/.test(e.key) && e.key.length === 1) e.preventDefault();
+        });
+
+        // Rasmni siqish (localStorage sig'imini tejash uchun)
+        function compressImage(file, maxW, quality, cb) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    const scale = Math.min(1, maxW / img.width);
+                    const w = Math.round(img.width * scale);
+                    const h = Math.round(img.height * scale);
+                    const canvas = document.createElement('canvas');
+                    canvas.width = w;
+                    canvas.height = h;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, w, h);
+                    cb(canvas.toDataURL('image/jpeg', quality));
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Egasi rasmi yuklash
+        rentEls.ownerPhotoInput.addEventListener('change', () => {
+            const file = rentEls.ownerPhotoInput.files[0];
+            if (!file) return;
+            compressImage(file, 300, 0.7, (dataUrl) => {
+                rentOwnerPhotoData = dataUrl;
+                rentEls.ownerImg.src = rentOwnerPhotoData;
+                rentEls.ownerPreview.style.display = 'flex';
+            });
+        });
+
+        rentEls.ownerRemove.addEventListener('click', () => {
+            rentOwnerPhotoData = null;
+            rentEls.ownerPhotoInput.value = '';
+            rentEls.ownerPreview.style.display = 'none';
+            rentEls.ownerImg.src = '';
+        });
+
+        // Xonadon rasmlari (4 ta) yuklash
+        function renderRentPhotoGrid() {
+            rentEls.photoGrid.innerHTML = rentPhotoGridData.map((src, i) => `
+                <div class="photo-grid-item">
+                    <img src="${src}" alt="Xonadon rasmi ${i + 1}">
+                    <button type="button" onclick="removeRentGridPhoto(${i})">✖</button>
+                </div>`).join('');
+        }
+
+        function removeRentGridPhoto(i) {
+            rentPhotoGridData.splice(i, 1);
+            renderRentPhotoGrid();
+        }
+
+        rentEls.photoInput.addEventListener('change', () => {
+            const files = Array.from(rentEls.photoInput.files || []);
+            const needed = 4 - rentPhotoGridData.length;
+            if (needed <= 0) {
+                showToast('❌ Faqat 4 ta rasm yuklash mumkin');
+                rentEls.photoInput.value = '';
+                return;
+            }
+            if (files.length > needed) {
+                showToast(`⚠️ Faqat ${needed} ta rasm joy qoldi, qolgani tashlab yuborildi`);
+            }
+            files.slice(0, needed).forEach((file) => {
+                if (!file) return;
+                compressImage(file, 600, 0.7, (dataUrl) => {
+                    if (rentPhotoGridData.length >= 4) return;
+                    rentPhotoGridData.push(dataUrl);
+                    renderRentPhotoGrid();
+                });
+            });
+            rentEls.photoInput.value = '';
+        });
+
+        rentEls.photoRemove.addEventListener('click', () => {
+            rentPhotoData = null;
+            rentEls.photoInput.value = '';
+            rentEls.photoPreview.style.display = 'none';
+            rentEls.photoImg.src = '';
+        });
+
+        function getRentals() {
+            try { return JSON.parse(localStorage.getItem(RENT_STORAGE)) || []; }
+            catch (e) { return []; }
+        }
+
+        function saveRentals(list) {
+            try {
+                localStorage.setItem(RENT_STORAGE, JSON.stringify(list));
+                return true;
+            } catch (e) {
+                showToast('❌ Xotira to\'ldi! Rasm o\'lchami katta');
+                return false;
+            }
+        }
+
+        function rentAddressToLatLng(str) {
+            const m = str.match(/-?[\d.]+,\s*-?[\d.]+/);
+            if (m) {
+                const parts = m[0].split(',');
+                const lat = parseFloat(parts[0].trim());
+                const lng = parseFloat(parts[1].trim());
+                if (!isNaN(lat) && !isNaN(lng)) return { lat, lng };
+            }
+            const m2 = str.match(/[?&]q=([-\d.,]+%2C[-\d.,]+)/i) || str.match(/[?&]ll=([-\d.,]+%2C[-\d.,]+)/i);
+            if (m2) {
+                const parts = decodeURIComponent(m2[1]).split(',');
+                const lat = parseFloat(parts[0]);
+                const lng = parseFloat(parts[1]);
+                if (!isNaN(lat) && !isNaN(lng)) return { lat, lng };
+            }
+            return null;
+        }
+
+        function haversineKm(lat1, lon1, lat2, lon2) {
+            const R = 6371;
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        }
+
+        function fmtDist(km) {
+            if (km == null || isNaN(km)) return '—';
+            if (km < 1) return Math.round(km * 1000) + ' m';
+            return km.toFixed(2) + ' km';
+        }
+
+        function fmtTime(mins) {
+            if (mins == null || isNaN(mins)) return '—';
+            if (mins < 1) return '<1 daqiqa';
+            if (mins < 60) return mins + ' daqiqa';
+            const h = Math.floor(mins / 60);
+            const m = mins % 60;
+            return m ? h + ' soat ' + m + ' daqiqa' : h + ' soat';
+        }
+
+        let selectingRentLocation = false;
+
+        function initRentMap() {
+            if (rentMap) return;
+            rentMap = L.map('map2').setView(UNIV_COORDS, 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap'
+            }).addTo(rentMap);
+            refreshUnivMarker();
+            rentMap.on('click', (e) => {
+                if (selectingRentLocation) {
+                    setRentLocation(e.latlng.lat, e.latlng.lng);
+                }
+            });
+            renderRentMapMarkers();
+        }
+
+        function refreshUnivMarker() {
+            if (!rentMap) return;
+            const photo = getUnivPhoto();
+            const inner = `<b>🏫 Toshkent Amaliy Fanlar Universiteti</b><br>S-bino, Farg'ona yo'li 147${photo ? `<br><img src="${photo}" style="width:160px;border-radius:8px;margin-top:6px;object-fit:cover;">` : ''}`;
+            if (rentUniMarker) {
+                rentUniMarker.setPopupContent(inner);
+            } else {
+                rentUniMarker = L.marker(UNIV_COORDS).addTo(rentMap)
+                    .bindPopup(inner).openPopup();
+            }
+        }
+
+        function renderRentMapMarkers() {
+            if (!rentMap) return;
+            if (rentRentMarkers) {
+                rentRentMarkers.forEach(m => m.remove());
+            }
+            rentRentMarkers = getRentals().filter(r => !r.blocked).map(r => {
+                const icon = r.ownerPhoto
+                    ? L.divIcon({
+                        className: 'rent-marker-icon',
+                        html: `<img src="${r.ownerPhoto}" style="width:40px;height:40px;border-radius:50%;border:3px solid #7c3aed;object-fit:cover;box-shadow:0 2px 6px rgba(0,0,0,.3);">`,
+                        iconSize: [40, 40],
+                        iconAnchor: [20, 20],
+                        popupAnchor: [0, -20]
+                    })
+                    : null;
+                return L.marker([r.lat, r.lng], { icon: icon || undefined }).addTo(rentMap)
+                    .bindPopup(`<b>${esc(r.name)} ${esc(r.surname)}</b><br>📞 ${esc(r.phone || '—')}<br>📏 Universitetgacha: ${fmtDist(r.straight)}${r.ownerPhoto ? `<br><img src="${r.ownerPhoto}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;margin-top:6px;">` : ''}`);
+            });
+        }
+
+        const pickBtn2 = document.getElementById('pick-location2');
+
+        if (pickBtn2) {
+            pickBtn2.addEventListener('click', () => {
+                selectingRentLocation = !selectingRentLocation;
+                pickBtn2.classList.toggle('active', selectingRentLocation);
+                pickBtn2.textContent = selectingRentLocation
+                    ? '🗺 Xaritadan nuqtani bosing...'
+                    : '📍 Xaritadan joylashuv tanlash';
+                if (selectingRentLocation) {
+                    switchSection(2);
+                    setTimeout(() => {
+                        initRentMap();
+                        rentMap.invalidateSize();
+                    }, 100);
+                }
+            });
+        }
+
+        function setRentLocation(lat, lng) {
+            rentSelected = { lat, lng };
+            rentEls.lat.value = lat.toFixed(6);
+            rentEls.lng.value = lng.toFixed(6);
+            if (!rentMap) initRentMap();
+            if (rentMarker) rentMarker.setLatLng([lat, lng]);
+            else rentMarker = L.marker([lat, lng]).addTo(rentMap).bindPopup('🏠 Tanlangan joylashuv');
+            rentMap.setView([lat, lng], Math.max(rentMap.getZoom(), 15));
+            calcRentDistance();
+        }
+
+        function startRentLiveTracking() {
+            if (!rentSelected || rentWatching) return;
+            if (!navigator.geolocation) return;
+            rentWatching = true;
+            showToast('📡 Joylashuvingiz aniqlanmoqda...');
+            navigator.geolocation.watchPosition((pos) => {
+                setRentLocation(pos.coords.latitude, pos.coords.longitude);
+            }, () => {
+                rentWatching = false;
+            }, { enableHighAccuracy: true });
+        }
+
+        document.getElementById('btn-search2').addEventListener('click', () => {
+            const url = rentEls.address.value.trim();
+            if (!url) { rentEls.linkHint.innerHTML = 'Manzil havolasini kiriting'; return; }
+            const c = rentAddressToLatLng(url);
+            if (c) {
+                setRentLocation(c.lat, c.lng);
+                rentEls.linkHint.innerHTML = '✅ Joylashuv aniqlandi';
+            } else {
+                rentEls.linkHint.innerHTML = '❌ Manzildan koordinata topilmadi. Google Maps/OSM havolasi qo\'yilsin';
+            }
+        });
+
+        document.getElementById('btn-add-rent').addEventListener('click', () => {
+            const name = rentEls.name.value.trim();
+            const surname = rentEls.surname.value.trim();
+            const phone = rentEls.phone.value.trim();
+            const price = rentEls.price.value.trim();
+            const desc = rentEls.desc.value.trim();
+            if (!name || !surname) { showToast('❌ Ism va familya kiriting'); return; }
+            if (!rentSelected) { showToast('❌ Xaritadan joylashuv tanlang'); return; }
+            const rentals = getRentals();
+            const [ulLat, ulLng] = UNIV_COORDS;
+            const item = {
+                id: Date.now(),
+                name, surname, phone,
+                price, desc,
+                lat: rentSelected.lat, lng: rentSelected.lng,
+                ownerPhoto: rentOwnerPhotoData || null,
+                photos: rentPhotoGridData.slice(0, 4),
+                straight: haversineKm(rentSelected.lat, rentSelected.lng, ulLat, ulLng),
+                added: new Date().toISOString()
+            };
+            rentals.push(item);
+            const saved = saveRentals(rentals);
+            if (!saved) { rentals.pop(); return; }
+            renderRentList();
+            renderRentMapMarkers();
+            showToast('✅ Xonadon ro\'yxatga olindi');
+            fetchBusRoutes(item);
+            rentEls.name.value = ''; rentEls.surname.value = ''; rentEls.phone.value = '';
+            rentEls.price.value = ''; rentEls.desc.value = '';
+            rentEls.address.value = ''; rentEls.lat.value = ''; rentEls.lng.value = '';
+            rentEls.linkHint.innerHTML = '';
+            rentPhotoData = null;
+            rentOwnerPhotoData = null;
+            rentPhotoGridData = [];
+            rentEls.ownerPhotoInput.value = '';
+            rentEls.ownerPreview.style.display = 'none';
+            rentEls.ownerImg.src = '';
+            rentEls.photoInput.value = '';
+            rentEls.photoPreview.style.display = 'none';
+            rentEls.photoImg.src = '';
+            rentEls.photoGrid.innerHTML = '';
+            rentEls.distBox.innerHTML = '';
+            rentSelected = null;
+            if (rentMarker) { rentMarker.remove(); rentMarker = null; }
+        });
+
+        function showRent(i) {
+            const rentals = getRentals();
+            const r = rentals[i];
+            if (!r) return;
+            if (!rentMap) initRentMap();
+            rentSelected = { lat: r.lat, lng: r.lng };
+            const viewerBox = document.getElementById('rent-distance2');
+            if (viewerBox) viewerBox.innerHTML = '';
+            if (rentMarker) rentMarker.setLatLng([r.lat, r.lng]);
+            else rentMarker = L.marker([r.lat, r.lng]).addTo(rentMap).bindPopup('🏠 Tanlangan joylashuv');
+            rentMap.setView([r.lat, r.lng], Math.max(rentMap.getZoom(), 15));
+            calcRentDistance(r);
+            calcWalkRoute(r);
+            fetchBusRoutes(r);
+        }
+
+        function calcRentDistance(r) {
+            const target = r || rentSelected;
+            if (!target) {
+                rentEls.distBox.innerHTML = 'Joylashuv tanlanmagan';
+                return;
+            }
+            const [ulLat, ulLng] = UNIV_COORDS;
+            const straight = haversineKm(target.lat, target.lng, ulLat, ulLng);
+            const msg = `<div class="distance-info">📏 To'g'ri chiziq: <b>${fmtDist(straight)}</b></div><div class="distance-info">⏳ Yo'l masofasi hisoblanmoqda...</div>`;
+            rentEls.distBox.innerHTML = msg;
+
+            if (rentLineLayer) rentLineLayer.remove();
+            rentLineLayer = L.polyline([[target.lat, target.lng], [ulLat, ulLng]], {
+                color: '#1d4ed8', weight: 2, dashArray: '6,6', opacity: 0.6
+            }).addTo(rentMap);
+
+            fetch(`https://router.project-osrm.org/route/v1/driving/${target.lng},${target.lat};${ulLng},${ulLat}?overview=full&geometries=geojson&alternatives=true`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data && data.routes && data.routes.length) {
+                        const route = data.routes[0];
+                        const km = route.distance / 1000;
+                        const mins = Math.round(route.duration / 60);
+                        if (rentRouteLayer) rentRouteLayer.remove();
+                        rentAltRouteLayers.forEach(l => l.remove());
+                        rentAltRouteLayers = data.routes.slice(1).map(r => L.geoJSON(r.geometry, {
+                            style: { color: '#dc2626', weight: 3, opacity: 0.4, dashArray: '4,4' }
+                        }).addTo(rentMap));
+                        rentRouteLayer = L.geoJSON(route.geometry, {
+                            style: { color: '#8b0000', weight: 6, opacity: 0.95 }
+                        }).addTo(rentMap);
+                        const resMsg =
+                            `<div class="distance-info">🚗 Mashinada: <b>${fmtDist(km)}</b>, <b>~${fmtTime(mins)}</b></div>`;
+                        rentEls.distBox.innerHTML = resMsg;
+                        appendRouteInfo(`🚗 Mashinada: <b>${fmtDist(km)}</b>, <b>~${fmtTime(mins)}</b>`);
+                    }
+                })
+                .catch(() => {
+                    const errMsg = `<div class="distance-info">📏 To'g'ri chiziq: <b>${fmtDist(straight)}</b></div><div class="distance-info">Yo'l hisoblashda xatolik</div>`;
+                    rentEls.distBox.innerHTML = errMsg;
+                    appendRouteInfo(`🚗 Mashinada: hisoblab bo'lmadi`);
+                });
+        }
+
+        const WALK_SPEED_KMH = 4.5;
+
+        function calcWalkRoute(r) {
+            const target = r || rentSelected;
+            if (!target) return;
+            const [ulLat, ulLng] = UNIV_COORDS;
+            if (rentWalkLayer) rentWalkLayer.remove();
+            fetch(`https://router.project-osrm.org/route/v1/driving/${target.lng},${target.lat};${ulLng},${ulLat}?overview=full&geometries=geojson`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data && data.routes && data.routes.length) {
+                        const route = data.routes[0];
+                        const km = route.distance / 1000;
+                        const mins = Math.round(km / WALK_SPEED_KMH * 60);
+                        rentWalkLayer = L.geoJSON(route.geometry, {
+                            style: { color: '#059669', weight: 4, opacity: 0.9 }
+                        }).addTo(rentMap);
+                        appendRouteInfo(`🚶 Piyoda: <b>${fmtDist(km)}</b>, <b>~${fmtTime(mins)}</b>`);
+                    } else {
+                        appendRouteInfo('🚶 Piyoda marshruti topilmadi');
+                    }
+                })
+                .catch(() => {
+                    appendRouteInfo('🚶 Piyoda marshruti hisoblab bo\'lmadi');
+                });
+        }
+
+        function appendRouteInfo(html) {
+            const viewerBox = document.getElementById('rent-distance2');
+            if (viewerBox) {
+                let cur = viewerBox.innerHTML;
+                cur = cur.replace(/<div class="distance-info">[^<]*hisoblanmoqda[^<]*<\/div>/g, '');
+                viewerBox.innerHTML = cur + `<div class="distance-info">${html}</div>`;
+            }
+        }
+
+        function loadBusRefs(target) {
+            const [ulLat, ulLng] = UNIV_COORDS;
+            const homeQuery = `[out:json][timeout:40];way(around:500,${target.lat},${target.lng})->.w;rel(bw.w)["route"~"^(bus|trolleybus)$"]["ref"]->.r;(.r;);out center tags;`;
+            const univQuery = `[out:json][timeout:40];way(around:500,${ulLat},${ulLng})->.w;rel(bw.w)["route"~"^(bus|trolleybus)$"]["ref"]->.r;(.r;);out center tags;`;
+            return Promise.all([
+                fetchOverpass(homeQuery),
+                fetchOverpass(univQuery)
+            ]).then(([homeData, univData]) => {
+                const homeRefs = new Set((homeData.elements || []).map(el => el.tags && el.tags.ref).filter(Boolean));
+                const univRefs = new Set((univData.elements || []).map(el => el.tags && el.tags.ref).filter(Boolean));
+                const bothRefs = [...homeRefs].filter(ref => univRefs.has(ref));
+                return { homeRefs: [...homeRefs], bothRefs, buses: bothRefs.length ? bothRefs : [...homeRefs] };
+            });
+        }
+
+        function ensureRentCardData(r) {
+            const [ulLat, ulLng] = UNIV_COORDS;
+            const jobs = [];
+            if (r.carKm == null || r.carMins == null) {
+                jobs.push(fetch(`https://router.project-osrm.org/route/v1/driving/${r.lng},${r.lat};${ulLng},${ulLat}?overview=false`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data && data.routes && data.routes[0]) {
+                            r.carKm = data.routes[0].distance / 1000;
+                            r.carMins = Math.round(data.routes[0].duration / 60);
+                        }
+                    }).catch(() => {}));
+            }
+            if (r.walkKm == null || r.walkMins == null) {
+                if (r.carKm != null) {
+                    r.walkKm = r.carKm;
+                    r.walkMins = Math.round(r.walkKm / WALK_SPEED_KMH * 60);
+                } else {
+                    jobs.push(fetch(`https://router.project-osrm.org/route/v1/driving/${r.lng},${r.lat};${ulLng},${ulLat}?overview=false`)
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data && data.routes && data.routes[0]) {
+                                r.carKm = data.routes[0].distance / 1000;
+                                r.carMins = Math.round(data.routes[0].duration / 60);
+                                r.walkKm = r.carKm;
+                                r.walkMins = Math.round(r.walkKm / WALK_SPEED_KMH * 60);
+                            }
+                        }).catch(() => {}));
+                }
+            }
+            if (r.buses == null || (Array.isArray(r.buses) && !r.buses.length && !r._busTried)) {
+                jobs.push(loadBusRefs(r)
+                    .then(res => { r.buses = res.buses; r._busTried = true; })
+                    .catch(() => { r._busTried = true; }));
+            }
+            if (!jobs.length) return;
+            Promise.all(jobs).then(() => {
+                const rentals = getRentals();
+                const idx = rentals.findIndex(x => x.id === r.id);
+                if (idx >= 0) {
+                    rentals[idx].carKm = r.carKm;
+                    rentals[idx].carMins = r.carMins;
+                    rentals[idx].walkKm = r.walkKm;
+                    rentals[idx].walkMins = r.walkMins;
+                    rentals[idx].buses = r.buses || [];
+                    rentals[idx]._busTried = r._busTried || true;
+                    saveRentals(rentals);
+                }
+                renderRentList();
+            });
+        }
+
+        function fetchBusRoutes(r) {
+            const target = r || rentSelected;
+            if (!target) return;
+            rentBusStopMarkers.forEach(m => m.remove());
+            rentBusStopMarkers = [];
+            rentMetroMarkers.forEach(m => m.remove());
+            rentMetroMarkers = [];
+            loadBusRefs(target)
+                .then(({ homeRefs, bothRefs, buses }) => {
+                    if (buses.length) {
+                        const rentals = getRentals();
+                        const idx = rentals.findIndex(x => x.id === target.id);
+                        if (idx >= 0) {
+                            rentals[idx].buses = buses;
+                            saveRentals(rentals);
+                        }
+                    }
+                    if (bothRefs.length) {
+                        appendRouteInfo(`🚌 Universitetga boradigan avtobuslar: ${bothRefs.map(b => `<b style="color:#b91c1c;cursor:pointer;text-decoration:underline;" onclick="showBusRoute(null, '${esc(String(b))}')">${esc(b)}</b>`).join(', ')}`);
+                    } else if (homeRefs.length) {
+                        appendRouteInfo(`🚌 Xonadon yaqinidan o'tadigan: ${homeRefs.map(b => `<b style="color:#b91c1c;cursor:pointer;text-decoration:underline;" onclick="showBusRoute(null, '${esc(String(b))}')">${esc(b)}</b>`).join(', ')}`);
+                    } else {
+                        appendRouteInfo('🚌 Xonadon yaqinida avtobus yo\'nalishi topilmadi');
+                    }
+                    fetchBusStops(target);
+                    fetchMetroStops(target);
+                    renderRentList();
+                })
+                .catch(() => {});
+        }
+
+        const OVERPASS_MIRRORS = [
+            'https://overpass.kumi.systems/api/interpreter',
+            'https://overpass-api.de/api/interpreter',
+            'https://maps.mail.ru/osm/tools/overpass/api/interpreter'
+        ];
+
+        function fetchOverpass(query) {
+            const enc = encodeURIComponent(query);
+            let i = 0;
+            return new Promise((resolve, reject) => {
+                function tryNext() {
+                    if (i >= OVERPASS_MIRRORS.length) { reject(new Error('overpass failed')); return; }
+                    const url = OVERPASS_MIRRORS[i] + '?data=' + enc;
+                    i++;
+                    const ctrl = new AbortController();
+                    const timer = setTimeout(() => ctrl.abort(), 30000);
+                    fetch(url, { signal: ctrl.signal })
+                        .then(res => res.json())
+                        .then(d => { clearTimeout(timer); resolve(d); })
+                        .catch(() => { clearTimeout(timer); tryNext(); });
+                }
+                tryNext();
+            });
+        }
+
+        function fetchBusStops(r) {
+            const query = `[out:json][timeout:25];(node["highway"="bus_stop"](around:1500,${r.lat},${r.lng}););out tags;`;
+            fetchOverpass(query)
+                .then(data => {
+                    if (!data || !data.elements) return;
+                    data.elements.forEach(el => {
+                        if (el.lat == null) return;
+                        const mk = L.marker([el.lat, el.lon], {
+                            icon: L.divIcon({
+                                className: 'bus-stop-icon',
+                                html: `<svg viewBox="0 0 24 24" width="22" height="22" fill="#fff"><path d="M4 16c0 .88.39 1.67 1 2.22V20a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-1h8v1a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-1.78c.61-.55 1-1.34 1-2.22V6c0-3.5-3.58-4-8-4s-8 .5-8 4v10zm3.5 1a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm9 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zM6 11V6h12v5H6z"/></svg>`,
+                                iconSize: [22, 22],
+                                iconAnchor: [11, 11]
+                            })
+                        }).addTo(rentMap)
+                            .bindPopup(`🚏 ${esc(el.tags && el.tags.name ? el.tags.name : 'Avtobus bekati')}${el.tags && el.tags.ref ? `<br>Yo'nalishlar: ${esc(el.tags.ref)}` : ''}`);
+                        rentBusStopMarkers.push(mk);
+                    });
+                })
+                .catch(() => {});
+        }
+
+        function fetchMetroStops(r) {
+            const query = `[out:json][timeout:25];(node["station"="subway"](around:3000,${r.lat},${r.lng});node["railway"="station"]["station"="subway"](around:3000,${r.lat},${r.lng}););out tags;`;
+            fetchOverpass(query)
+                .then(data => {
+                    if (!data || !data.elements || !data.elements.length) {
+                        appendRouteInfo('🚇 Yaqin metro bekati topilmadi');
+                        return;
+                    }
+                    let nearest = null;
+                    let nearestDist = Infinity;
+                    data.elements.forEach(el => {
+                        if (el.lat == null) return;
+                        const d = haversineKm(r.lat, r.lng, el.lat, el.lon);
+                        if (d < nearestDist) {
+                            nearestDist = d;
+                            nearest = el;
+                        }
+                        const mk = L.marker([el.lat, el.lon], {
+                            icon: L.divIcon({
+                                className: 'metro-stop-icon',
+                                html: `<svg viewBox="0 0 24 24" width="24" height="24" fill="#fff"><path d="M12 2c-4.42 0-8 .5-8 4v9.5C4 17.43 5.57 19 7.5 19L6 20.5v.5h2l2-2h4l2 2h2v-.5L16.5 19c1.93 0 3.5-1.57 3.5-3.5V6c0-3.5-3.58-4-8-4zM7.76 16.5a1.25 1.25 0 1 1 0-2.5 1.25 1.25 0 0 1 0 2.5zm8.48 0a1.25 1.25 0 1 1 0-2.5 1.25 1.25 0 0 1 0 2.5zM17 12H7V6h10v6z"/></svg>`,
+                                iconSize: [24, 24],
+                                iconAnchor: [12, 12]
+                            })
+                        }).addTo(rentMap)
+                            .bindPopup(`🚇 ${esc(el.tags && el.tags.name ? el.tags.name : 'Metro bekati')}`);
+                        rentMetroMarkers.push(mk);
+                    });
+                    if (nearest) {
+                        const name = nearest.tags && nearest.tags.name ? nearest.tags.name : 'Metro bekati';
+                        appendRouteInfo(`🚇 Eng yaqin metro: <b>${esc(name)}</b> (${fmtDist(nearestDist)})`);
+                    }
+                })
+                .catch(() => {});
+        }
+
+        function showBusRoute(id, ref) {
+            if (!ref) return;
+            let lat, lng;
+            if (id) {
+                const r = getRentals().find(x => x.id === id);
+                if (r) { lat = r.lat; lng = r.lng; }
+            }
+            if (lat == null && rentSelected) { lat = rentSelected.lat; lng = rentSelected.lng; }
+            if (lat == null) { showToast('❌ Xonadon joylashuvi topilmadi'); return; }
+            showToast(`🚌 ${ref}-yo'nalish yuklanmoqda...`);
+            const query = `[out:json][timeout:40];relation["route"~"^(bus|trolleybus)$"]["ref"="${ref}"](around:15000,${lat},${lng});(._;>;);out geom;`;
+            fetchOverpass(query)
+                .then(data => {
+                    if (!data || !data.elements || !data.elements.length) {
+                        showToast(`🚌 ${ref}-yo'nalish topilmadi`);
+                        return;
+                    }
+                    const coords = [];
+                    data.elements.forEach(el => {
+                        if (el.geometry && el.geometry.length) {
+                            el.geometry.forEach(g => coords.push([g.lat, g.lon]));
+                        }
+                    });
+                    if (!coords.length) {
+                        showToast(`🚌 ${ref}-yo'nalish topilmadi`);
+                        return;
+                    }
+                    if (rentBusRouteLayer) rentBusRouteLayer.remove();
+                    rentBusRouteLayer = L.polyline(coords, {
+                        color: '#166534', weight: 5, opacity: 0.9
+                    }).addTo(rentMap)
+                        .bindPopup(`🚌 ${esc(ref)}-yo'nalish`);
+                    if (rentMap) rentMap.fitBounds(rentBusRouteLayer.getBounds().pad(0.15));
+                    showToast(`✅ ${ref}-yo'nalish chizig'i ko'rsatildi`);
+                })
+                .catch(() => {
+                    showToast(`❌ ${ref}-yo'nalish yuklanmadi`);
+                });
+        }
+
+        function renderRentList() {
+            const isAdmin = document.body.classList.contains('super-admin');
+            const all = getRentals();
+            const rentals = isAdmin ? all : all.filter(r => !r.blocked);
+            const countEl = document.getElementById('rent-count2');
+            if (countEl) countEl.textContent = rentals.length;
+            const listEl = document.getElementById('rent-list2');
+            const distEl = document.getElementById('rent-distance2');
+            if (!rentals.length) {
+                if (listEl) listEl.innerHTML = '<div style="color:#6b7280;font-size:13px;padding:8px 0;">Xonadonlar hali qo\'shilmagan</div>';
+                if (distEl) distEl.innerHTML = '';
+                return;
+            }
+            if (distEl && !rentSelected) distEl.innerHTML = '';
+            listEl.innerHTML = rentals.map((r, i) => {
+                ensureRentCardData(r);
+                return `
+                <div class="student-card" style="cursor:pointer;${r.blocked ? 'opacity:0.55;' : ''}" onclick="showRentById(${r.id})">
+                    <div>
+                        <b>${esc(r.name)} ${esc(r.surname)}</b> ${r.blocked ? '<span style="background:#ef4444;color:#fff;font-size:10px;padding:2px 6px;border-radius:4px;">🚫 BLOKLANGAN</span>' : ''}
+                        <div style="font-size:12px;color:#6b7280;">📞 ${esc(r.phone || '—')}</div>
+                        ${r.price ? `<div style="font-size:13px;color:#059669;font-weight:600;">💰 ${esc(r.price)} so'm / oy</div>` : ''}
+                        ${r.desc ? `<div style="font-size:12px;color:#4b5563;margin-top:3px;">📝 ${esc(r.desc)}</div>` : ''}
+                        <div style="font-size:12px;color:#6b7280;">📍 ${r.lat.toFixed(4)}, ${r.lng.toFixed(4)} <button type="button" class="copy-loc-btn" onclick="event.stopPropagation(); copyRentLocation(${r.id})">📋</button></div>
+                        <div style="font-size:12px;color:#6b7280;">📍 Universitetgacha masofa: <b style="color:#7c3aed;">${fmtDist(r.straight)}</b></div>
+                        ${r.walkKm != null ? `<div style="font-size:12px;color:#6b7280;">🚶 Piyoda: <b style="color:#059669;">${fmtDist(r.walkKm)}</b>, <b>~${fmtTime(r.walkMins)}</b></div>` : ''}
+                        ${r.carKm != null ? `<div style="font-size:12px;color:#6b7280;">🚗 Mashinada: <b style="color:#8b0000;">${fmtDist(r.carKm)}</b>, <b>~${fmtTime(r.carMins)}</b></div>` : ''}
+                        ${r.ownerPhoto ? `<img src="${r.ownerPhoto}" class="rent-owner-thumb" onclick="event.stopPropagation(); openPhoto('${r.ownerPhoto}')">` : ''}
+                        ${(r.photos && r.photos.length) ? r.photos.slice(0, 4).map(p => `<img src="${p}" class="rent-photo-thumb" onclick="event.stopPropagation(); openPhoto('${p}')">`).join('') : ''}
+                    </div>
+                    ${isAdmin ? `<div style="display:flex;flex-direction:column;gap:6px;">
+                        <button type="button" class="delete-btn" style="background:${r.blocked ? '#059669' : '#f59e0b'};" onclick="event.stopPropagation(); toggleBlockRentById(${r.id})">${r.blocked ? '✓ OCHISH' : '🚫 BLOK'}</button>
+                        <button type="button" class="delete-btn" onclick="event.stopPropagation(); deleteRentById(${r.id})">🗑</button>
+                    </div>` : ''}
+                </div>`;
+            }).join('');
+        }
+
+        function showRentById(id) {
+            const idx = getRentals().findIndex(x => x.id === id);
+            if (idx < 0) return;
+            showRent(idx);
+        }
+
+        function copyRentLocation(id) {
+            const r = getRentals().find(x => x.id === id);
+            if (!r) return;
+            const text = `${r.lat.toFixed(6)}, ${r.lng.toFixed(6)}`;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text)
+                    .then(() => showToast('📍 Lokatsiya nusxalandi'))
+                    .catch(() => fallbackCopy(text));
+            } else {
+                fallbackCopy(text);
+            }
+        }
+
+        function fallbackCopy(text) {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.position = 'fixed';
+            ta.style.opacity = '0';
+            document.body.appendChild(ta);
+            ta.select();
+            try {
+                document.execCommand('copy');
+                showToast('📍 Lokatsiya nusxalandi');
+            } catch (e) {
+                showToast('❌ Nusxalashda xatolik');
+            }
+            document.body.removeChild(ta);
+        }
+
+        function toggleBlockRentById(id) {
+            const rentals = getRentals();
+            const i = rentals.findIndex(x => x.id === id);
+            if (i < 0) return;
+            rentals[i].blocked = !rentals[i].blocked;
+            saveRentals(rentals);
+            renderRentList();
+            renderRentMapMarkers();
+            showToast(rentals[i].blocked ? '🚫 Xonadon bloklandi' : '✅ Xonadon ochildi');
+        }
+
+        function deleteRentById(id) {
+            const rentals = getRentals();
+            const i = rentals.findIndex(x => x.id === id);
+            if (i < 0) return;
+            rentals.splice(i, 1);
+            saveRentals(rentals);
+            renderRentList();
+            renderRentMapMarkers();
+            showToast('🗑 Xonadon o\'chirildi');
+        }
+
+        function esc(s) {
+            const d = document.createElement('div');
+            d.textContent = s == null ? '' : String(s);
+            return d.innerHTML;
+        }
+
+        // ==================== RASM KO'RISH (LIGHTBOX) ====================
+        function openPhoto(src) {
+            const lb = document.getElementById('photo-lightbox');
+            const img = document.getElementById('photo-lightbox-img');
+            img.src = src;
+            lb.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closePhotoLightbox(e) {
+            const lb = document.getElementById('photo-lightbox');
+            if (e && e.target && e.target.id !== 'photo-lightbox') {
+                if (e.target.closest && e.target.closest('.photo-lightbox-content')) return;
+            }
+            lb.style.display = 'none';
+            document.body.style.overflow = '';
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                const lb = document.getElementById('photo-lightbox');
+                lb.style.display = 'none';
+                document.body.style.overflow = '';
+            }
+        });
+
+        renderRentList();
+    </script>
+</body>
+</html>
